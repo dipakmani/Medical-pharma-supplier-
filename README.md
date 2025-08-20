@@ -18,13 +18,14 @@ num_hospitals = 50
 num_departments = 20
 num_pharmacies = 200
 num_suppliers = 800
+num_medicines = 2000   # Unique medicines master data
 
 # Patients
 patients = [
     {
         "PatientID": i,
         "PatientName": fake.name(),
-        "PatientGender": random.choice(["Male", "Female"]),
+        "PatientGender": random.choices(["Male", "Female"], weights=[0.6, 0.4])[0],  # 60% Male, 40% Female
         "PatientAge": random.randint(1, 90),
         "PatientAddress": fake.address().replace("\n", ", ")
     }
@@ -91,10 +92,20 @@ suppliers = [
     for i in range(1, num_suppliers + 1)
 ]
 
-# Medicine details (lookup)
+# Medicines (Master Data)
 medicine_categories = ["Antibiotic", "Analgesic", "Antidepressant", "Antihypertensive", "Antidiabetic"]
 brand_names = ["MediLife", "HealthPlus", "CureFast", "WellCare", "PharmaPro"]
 chemical_contents = ["Paracetamol", "Ibuprofen", "Metformin", "Amoxicillin", "Atorvastatin"]
+
+medicines = [
+    {
+        "MedicineID": i,
+        "MedicineCategory": random.choice(medicine_categories),
+        "BrandName": random.choice(brand_names),
+        "ChemicalContent": random.choice(chemical_contents)
+    }
+    for i in range(1, num_medicines + 1)
+]
 
 # --------------------------
 # Generate Fact_Medications
@@ -107,10 +118,7 @@ for i in range(1, n + 1):
     department = random.choice(departments)
     pharmacy = random.choice(pharmacies)
     supplier = random.choice(suppliers)
-    
-    medicine_category = random.choice(medicine_categories)
-    brand_name = random.choice(brand_names)
-    chemical_content = random.choice(chemical_contents)
+    medicine = random.choice(medicines)
     
     mfg_date = fake.date_between(start_date="-3y", end_date="-6m")
     expiry_date = mfg_date + timedelta(days=random.randint(180, 1095))  # 6 months to 3 years later
@@ -123,6 +131,7 @@ for i in range(1, n + 1):
         "DepartmentID": department["DepartmentID"],
         "PharmacyID": pharmacy["PharmacyID"],
         "SupplierID": supplier["SupplierID"],
+        "MedicineID": medicine["MedicineID"],
         
         # Patient attributes
         "PatientName": patient["PatientName"],
@@ -161,9 +170,9 @@ for i in range(1, n + 1):
         "ContractEndDate": supplier["ContractEndDate"],
         
         # Medicine attributes
-        "MedicineCategory": medicine_category,
-        "BrandName": brand_name,
-        "ChemicalContent": chemical_content,
+        "MedicineCategory": medicine["MedicineCategory"],
+        "BrandName": medicine["BrandName"],
+        "ChemicalContent": medicine["ChemicalContent"],
         "ManufacturingDate": mfg_date,
         "ExpiryDate": expiry_date,
         "Dosage": str(random.randint(1, 2)) + " tablet(s) " + random.choice(["daily", "twice a day", "weekly"]),
@@ -178,4 +187,4 @@ df = pd.DataFrame(fact_records)
 # Save to CSV
 df.to_csv("fact_medications.csv", index=False)
 
-print("✅ fact_medications.csv generated with", n, "records")
+print("✅ fact_medications.csv generated with", n, "records including MedicineID")
